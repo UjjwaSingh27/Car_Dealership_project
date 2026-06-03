@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Register - CarDeal{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-5">
+    <div class="col-md-5 col-lg-4">
+        <div class="text-center mb-4">
+            <div style="font-size:3rem; color:var(--success-color)">
+                <i class="bi bi-person-plus-fill"></i>
+            </div>
+            <h2 style="font-family:var(--font-heading)" class="mt-2">Create Account</h2>
+            <p class="text-muted">Join CarDeal to browse, buy, and manage cars</p>
+        </div>
+
+        <div class="card p-4" style="border-radius:var(--radius); box-shadow:var(--shadow-md)">
+            <form action="{{ url_for('auth.register') }}" method="POST">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">First Name</label>
+                        <input type="text" class="form-control" name="fname"
+                               placeholder="John" required autofocus>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Last Name</label>
+                        <input type="text" class="form-control" name="lname"
+                               placeholder="Doe" required>
+                    </div>
+                </div>
+
+                <div class="mb-3 mt-3">
+                    <label class="form-label">Username</label>
+                    <div class="input-group">
+                        <span class="input-group-text" style="border-radius:var(--radius) 0 0 var(--radius)">
+                            <i class="bi bi-at"></i>
+                        </span>
+                        <input type="text" class="form-control" name="username"
+                               placeholder="Choose a username" required
+                               style="border-radius:0 var(--radius) var(--radius) 0">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text" style="border-radius:var(--radius) 0 0 var(--radius)">
+                            <i class="bi bi-lock"></i>
+                        </span>
+                        <input type="password" class="form-control" name="password"
+                               id="registerPassword" placeholder="Min. 6 characters" required
+                               style="border-radius:0">
+                        <button class="btn btn-outline-secondary" type="button"
+                                data-toggle-password="#registerPassword"
+                                style="border-radius:0 var(--radius) var(--radius) 0">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-3" id="passwordStrength" style="display:none">
+                    <div class="progress" style="height:4px">
+                        <div class="progress-bar" id="strengthBar" style="width:0%"></div>
+                    </div>
+                    <small class="text-muted" id="strengthLabel"></small>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                    <label class="form-check-label small text-muted" for="termsCheck">
+                        I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-success w-100 py-2">
+                    <i class="bi bi-check-circle"></i> Create Account
+                </button>
+            </form>
+
+            <hr class="my-3">
+            <p class="text-center mb-0 small">
+                Already have an account?
+                <a href="{{ url_for('auth.login') }}" class="fw-semibold">Login here</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+const passInput = document.getElementById('registerPassword');
+if (passInput) {
+    passInput.addEventListener('input', function () {
+        const val = this.value;
+        const div = document.getElementById('passwordStrength');
+        if (!val) { div.style.display = 'none'; return; }
+        div.style.display = 'block';
+        let score = 0;
+        if (val.length >= 6) score++;
+        if (val.length >= 10) score++;
+        if (/[A-Z]/.test(val)) score++;
+        if (/[0-9]/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+        const pct = (score / 5) * 100;
+        document.getElementById('strengthBar').style.width = pct + '%';
+        document.getElementById('strengthBar').className = 'progress-bar ' +
+            (pct < 40 ? 'bg-danger' : pct < 70 ? 'bg-warning' : 'bg-success');
+        document.getElementById('strengthLabel').textContent =
+            ['', 'Very Weak', 'Weak', 'Fair', 'Strong', 'Very Strong'][score] || '';
+    });
+}
+</script>
+{% endblock %}

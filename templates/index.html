@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Car Inventory - Smart Car Dealership{% endblock %}
+
+{% block content %}
+
+<!-- ==============================
+     HERO SECTION
+============================== -->
+<div class="hero-section">
+    <div class="row align-items-center">
+        <div class="col-lg-7">
+            <h1><i class="bi bi-car-front-fill" style="color:#60a5fa"></i> Find Your Dream Car</h1>
+            <p class="mb-0">Browse our premium collection of {{ total }}+ vehicles. Buy with confidence, drive with pride.</p>
+            <a href="#filters" class="hero-cta">
+                <i class="bi bi-search"></i> Browse Inventory
+            </a>
+        </div>
+        <div class="col-lg-5 d-none d-lg-block">
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="number">{{ total }}</div>
+                    <div class="label">Vehicles</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="number">{{ makes|length }}</div>
+                    <div class="label">Brands</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="number">200+</div>
+                    <div class="label">Happy Customers</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==============================
+     FILTER + SORT BAR
+============================== -->
+<div class="filter-bar" id="filters">
+    <form method="GET" action="{{ url_for('cars.index') }}" id="filterForm">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label small">Search</label>
+                <input type="text" class="form-control" name="search" value="{{ search }}"
+                       placeholder="Make, model, VIN...">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Make</label>
+                <select class="form-select" name="make">
+                    <option value="">All Makes</option>
+                    {% for m in makes %}
+                        <option value="{{ m }}" {% if make == m %}selected{% endif %}>{{ m }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Min Price ($)</label>
+                <input type="number" class="form-control" name="min_price" value="{{ min_price }}" placeholder="0">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Max Price ($)</label>
+                <input type="number" class="form-control" name="max_price" value="{{ max_price }}" placeholder="Any">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Status</label>
+                <select class="form-select" name="status">
+                    <option value="">All</option>
+                    <option value="Available" {% if status == 'Available' %}selected{% endif %}>Available</option>
+                    <option value="Sold" {% if status == 'Sold' %}selected{% endif %}>Sold</option>
+                    <option value="Maintenance" {% if status == 'Maintenance' %}selected{% endif %}>Maintenance</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Fuel Type</label>
+                <select class="form-select" name="fuel">
+                    <option value="">All</option>
+                    <option value="Petrol" {% if fuel == 'Petrol' %}selected{% endif %}>Petrol</option>
+                    <option value="Diesel" {% if fuel == 'Diesel' %}selected{% endif %}>Diesel</option>
+                    <option value="Electric" {% if fuel == 'Electric' %}selected{% endif %}>Electric</option>
+                    <option value="Hybrid" {% if fuel == 'Hybrid' %}selected{% endif %}>Hybrid</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Sort By</label>
+                <select class="form-select sort-select" name="sort">
+                    <option value="vin" {% if sort == 'vin' or not sort %}selected{% endif %}>Default</option>
+                    <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                    <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+                    <option value="year_desc" {% if sort == 'year_desc' %}selected{% endif %}>Year: Newest First</option>
+                    <option value="year_asc" {% if sort == 'year_asc' %}selected{% endif %}>Year: Oldest First</option>
+                    <option value="mileage_asc" {% if sort == 'mileage_asc' %}selected{% endif %}>Mileage: Lowest</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex gap-2 align-items-end mt-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i> Search
+                </button>
+                <a href="{{ url_for('cars.index') }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Clear
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- ==============================
+     RESULTS HEADER
+============================== -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <p class="text-muted mb-0 small">
+        <i class="bi bi-list-ul"></i>
+        Showing {{ cars|length }} of <strong>{{ total }}</strong> vehicles
+        {% if search or make or status %} &bull; Filtered results{% endif %}
+    </p>
+    {% if total > 20 %}
+    <nav aria-label="Inventory pagination">
+        <ul class="pagination pagination-sm mb-0">
+            {% if page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page - 1 }}&search={{ search }}&make={{ make }}&min_price={{ min_price }}&max_price={{ max_price }}&status={{ status }}&fuel={{ fuel }}&sort={{ sort }}">Prev</a>
+                </li>
+            {% endif %}
+            {% for p in range(1, ((total - 1) // 20) + 2) %}
+                {% if p >= page - 1 and p <= page + 1 %}
+                    <li class="page-item {% if p == page %}active{% endif %}">
+                        <a class="page-link" href="?page={{ p }}&search={{ search }}&make={{ make }}&min_price={{ min_price }}&max_price={{ max_price }}&status={{ status }}&fuel={{ fuel }}&sort={{ sort }}">{{ p }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            {% if page * 20 < total %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page + 1 }}&search={{ search }}&make={{ make }}&min_price={{ min_price }}&max_price={{ max_price }}&status={{ status }}&fuel={{ fuel }}&sort={{ sort }}">Next</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- ==============================
+     CAR GRID
+============================== -->
+{% if cars %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-3" id="carGrid">
+        {% for car in cars %}
+            <div class="col">
+                <div class="card car-card h-100">
+                    <div class="card-img-wrapper">
+                        {% if car.image_path %}
+                            <img src="{{ url_for('static', filename='images/' + car.image_path) }}"
+                                 alt="{{ car.make }} {{ car.model }}"
+                                 class="card-img-top"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        {% endif %}
+                        <div class="car-image-placeholder" style="height:180px; display:{% if not car.image_path %}flex{% else %}none{% endif %}">
+                            <i class="bi bi-car-front-fill"></i>
+                            <span>{{ car.make }}</span>
+                        </div>
+                        <!-- Status badge -->
+                        <span class="badge {% if car.status == 'Available' %}bg-success{% elif car.status == 'Sold' %}bg-danger{% else %}bg-warning{% endif %} position-absolute top-0 end-0 m-2">
+                            {{ car.status }}
+                        </span>
+                        <!-- Hover overlay -->
+                        <div class="card-img-overlay">
+                            <a href="{{ url_for('cars.detail', vin=car.vin) }}" class="btn btn-light btn-sm">
+                                <i class="bi bi-eye"></i> Quick View
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ car.year }} {{ car.make }} {{ car.model }}</h5>
+                        <p class="card-text text-muted small mb-1">
+                            <i class="bi bi-gear"></i> {{ car.transmission or 'N/A' }} &nbsp;&bull;&nbsp;
+                            <i class="bi bi-fueltank"></i> {{ car.fuel_type or 'N/A' }}
+                        </p>
+                        <p class="card-text small mb-1" style="color:var(--text-muted)">
+                            <i class="bi bi-speedometer"></i> {{ (car.mileage or 0)|int|default(0) }} km &nbsp;&bull;&nbsp;
+                            <i class="bi bi-palette"></i> {{ car.color or 'N/A' }}
+                        </p>
+                        <h6 class="text-primary fw-bold mb-0" style="font-family:var(--font-heading)">
+                            ${{ "{:,.2f}".format(car.selling_price) }}
+                        </h6>
+                    </div>
+                    <div class="card-footer bg-white border-top-0">
+                        <a href="{{ url_for('cars.detail', vin=car.vin) }}" class="btn btn-outline-primary btn-sm w-100">
+                            <i class="bi bi-eye"></i> View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Bottom Pagination -->
+    {% if total > 20 %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page - 1 }}&search={{ search }}&make={{ make }}&min_price={{ min_price }}&max_price={{ max_price }}&status={{ status }}&fuel={{ fuel }}&sort={{ sort }}">Previous</a>
+                    </li>
+                {% endif %}
+                <li class="page-item active">
+                    <span class="page-link">Page {{ page }} of {{ ((total - 1) // 20) + 1 }}</span>
+                </li>
+                {% if page * 20 < total %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page + 1 }}&search={{ search }}&make={{ make }}&min_price={{ min_price }}&max_price={{ max_price }}&status={{ status }}&fuel={{ fuel }}&sort={{ sort }}">Next</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+
+{% else %}
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState">
+        <div class="empty-icon">
+            <i class="bi bi-car-front"></i>
+        </div>
+        <h5>No Cars Found</h5>
+        <p>We couldn't find any vehicles matching your criteria. Try adjusting your filters or search terms.</p>
+        <a href="{{ url_for('cars.index') }}" class="btn btn-primary">
+            <i class="bi bi-arrow-counterclockwise"></i> Clear All Filters
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

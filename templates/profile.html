@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - CarDeal{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+
+        <!-- Profile Card -->
+        <div class="profile-card mb-4">
+            <div class="text-center mb-4">
+                <div class="profile-avatar-lg mx-auto mb-3">
+                    {{ user.fname[0] }}{{ user.lname[0] }}
+                </div>
+                <h4 class="mb-0" style="font-family:var(--font-heading)">{{ user.fname }} {{ user.lname }}</h4>
+                <p class="text-muted small mb-1">@{{ user.username }}</p>
+                <span class="badge bg-primary">
+                    <i class="bi bi-shield{% if user.role == 'admin' %}-check{% endif %}"></i>
+                    {{ user.role|title }}
+                </span>
+                <br>
+                <small class="text-muted mt-1 d-block">
+                    <i class="bi bi-calendar3 me-1"></i>
+                    Member since {{ user.created_at.strftime('%B %Y') if user.created_at else 'N/A' }}
+                </small>
+            </div>
+
+            <!-- Dashboard link -->
+            <div class="text-center mb-3">
+                <a href="{{ url_for('customer.dashboard') }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-speedometer2"></i> Go to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Edit Profile Form -->
+        <div class="card mb-4" style="border-radius:var(--radius)">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-person-badge" style="color:var(--primary-color)"></i> Edit Profile</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('auth.profile') }}" method="POST">
+                    <input type="hidden" name="action" value="update_profile">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">First Name</label>
+                            <input type="text" class="form-control" name="fname" value="{{ user.fname }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" class="form-control" name="lname" value="{{ user.lname }}" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Username</label>
+                            <input type="text" class="form-control" value="{{ user.username }}" disabled
+                                   title="Username cannot be changed">
+                            <small class="text-muted">Username is fixed and cannot be changed.</small>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3">
+                        <i class="bi bi-save"></i> Save Changes
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Change Password Form -->
+        <div class="card" style="border-radius:var(--radius)">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-lock" style="color:var(--primary-color)"></i> Change Password</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('auth.profile') }}" method="POST">
+                    <input type="hidden" name="action" value="change_password">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Current Password</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" name="current_password"
+                                       id="currentPassword" required>
+                                <button class="btn btn-outline-secondary" type="button"
+                                        data-toggle-password="#currentPassword">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">New Password</label>
+                            <input type="password" class="form-control" name="new_password" id="newPassword" required
+                                   placeholder="Min. 6 characters">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" name="confirm_password" id="confirmPassword" required
+                                   placeholder="Repeat new password">
+                        </div>
+                    </div>
+                    <!-- Password strength indicator -->
+                    <div class="mt-2" id="passwordStrength" style="display:none">
+                        <div class="progress" style="height:4px">
+                            <div class="progress-bar" id="strengthBar" style="width:0%"></div>
+                        </div>
+                        <small class="text-muted" id="strengthLabel"></small>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3">
+                        <i class="bi bi-key"></i> Update Password
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// Password strength meter
+const newPassInput = document.getElementById('newPassword');
+const strengthDiv = document.getElementById('passwordStrength');
+const strengthBar = document.getElementById('strengthBar');
+const strengthLabel = document.getElementById('strengthLabel');
+
+if (newPassInput) {
+    newPassInput.addEventListener('input', function () {
+        const val = this.value;
+        if (!val) { strengthDiv.style.display = 'none'; return; }
+        strengthDiv.style.display = 'block';
+        let score = 0;
+        if (val.length >= 6) score++;
+        if (val.length >= 10) score++;
+        if (/[A-Z]/.test(val)) score++;
+        if (/[0-9]/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+        const pct = (score / 5) * 100;
+        strengthBar.style.width = pct + '%';
+        strengthBar.className = 'progress-bar ' + (pct < 40 ? 'bg-danger' : pct < 70 ? 'bg-warning' : 'bg-success');
+        strengthLabel.textContent = ['', 'Very Weak', 'Weak', 'Fair', 'Strong', 'Very Strong'][score] || '';
+    });
+
+    // Confirm password match
+    document.querySelector('form[action="{{ url_for("auth.profile") }}"]').addEventListener('submit', function (e) {
+        const np = document.getElementById('newPassword').value;
+        const cp = document.getElementById('confirmPassword').value;
+        if (np !== cp) {
+            e.preventDefault();
+            showToast('New passwords do not match!', 'warning');
+        }
+    });
+}
+</script>
+{% endblock %}

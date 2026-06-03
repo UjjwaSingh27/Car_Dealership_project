@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - CarDeal{% endblock %}
+
+{% block content %}
+<!-- Dashboard Header -->
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h1 class="dashboard-greeting">
+            <i class="bi bi-person-circle"></i>
+            Hello, {{ session.fname }} {{ session.lname }}
+        </h1>
+        <p class="text-muted mb-0">Welcome back to your personalized car dealership dashboard.</p>
+    </div>
+    <a href="{{ url_for('cars.index') }}" class="btn btn-primary">
+        <i class="bi bi-search"></i> Browse Cars
+    </a>
+</div>
+
+<!-- Quick Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card primary">
+            <div class="stat-icon" style="color:var(--primary-color)"><i class="bi bi-heart-fill"></i></div>
+            <div class="stat-number" data-count-up="{{ wishlist|length }}">{{ wishlist|length }}</div>
+            <div class="stat-label">Wishlist Items</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card success">
+            <div class="stat-icon" style="color:var(--success-color)"><i class="bi bi-bag-check-fill"></i></div>
+            <div class="stat-number" data-count-up="{{ purchased|length }}">{{ purchased|length }}</div>
+            <div class="stat-label">Purchases</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card info">
+            <div class="stat-icon" style="color:var(--info-color)"><i class="bi bi-calendar-check"></i></div>
+            <div class="stat-number" data-count-up="{{ test_drives|length }}">{{ test_drives|length }}</div>
+            <div class="stat-label">Test Drives</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card warning">
+            <div class="stat-icon" style="color:var(--warning-color)"><i class="bi bi-wallet2"></i></div>
+            <div class="stat-number" style="font-size:1.4rem">${{ "{:,.0f}".format(total_spent) }}</div>
+            <div class="stat-label">Total Spent</div>
+        </div>
+    </div>
+</div>
+
+<!-- ==============================
+     TABS
+============================== -->
+<ul class="nav nav-tabs mb-4" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#wishlist">
+            <i class="bi bi-heart-fill"></i> Wishlist
+            {% if wishlist %}<span class="badge bg-primary ms-1">{{ wishlist|length }}</span>{% endif %}
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#testdrives">
+            <i class="bi bi-calendar-check"></i> Test Drives
+            {% if test_drives %}<span class="badge bg-primary ms-1">{{ test_drives|length }}</span>{% endif %}
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#orders">
+            <i class="bi bi-receipt"></i> Orders
+            {% if transactions %}<span class="badge bg-primary ms-1">{{ transactions|length }}</span>{% endif %}
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#purchased">
+            <i class="bi bi-bag-check"></i> Purchased
+            {% if purchased %}<span class="badge bg-primary ms-1">{{ purchased|length }}</span>{% endif %}
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content">
+
+    <!-- ===== WISHLIST ===== -->
+    <div class="tab-pane fade show active" id="wishlist">
+        {% if wishlist %}
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+                {% for item in wishlist %}
+                    <div class="col">
+                        <div class="card car-card">
+                            <div class="row g-0 align-items-center">
+                                <div class="col-4">
+                                    {% if item.image_path %}
+                                        <img src="{{ url_for('static', filename='images/' + item.image_path) }}"
+                                             alt="{{ item.make }}" style="height:100px;width:100%;object-fit:cover;border-radius:0"
+                                             onerror="this.outerHTML=`<div class='car-image-placeholder' style='height:100px;border-radius:0'><i class='bi bi-car-front-fill'></i></div>`">
+                                    {% else %}
+                                        <div class="car-image-placeholder" style="height:100px;border-radius:0">
+                                            <i class="bi bi-car-front-fill"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-8">
+                                    <div class="card-body p-2">
+                                        <h6 class="mb-1">{{ item.year }} {{ item.make }} {{ item.model }}</h6>
+                                        <p class="text-success fw-bold mb-1">${{ "{:,.2f}".format(item.selling_price) }}</p>
+                                        <small class="text-muted">Added {{ item.added_at.strftime('%Y-%m-%d') if item.added_at else 'N/A' }}</small>
+                                        <div class="mt-2 d-flex gap-1">
+                                            <a href="{{ url_for('cars.detail', vin=item.vin) }}" class="btn btn-sm btn-outline-primary">View</a>
+                                            <form action="{{ url_for('customer.remove_from_wishlist') }}" method="POST" class="d-inline">
+                                                <input type="hidden" name="vin" value="{{ item.vin }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                        data-confirm="Remove {{ item.make }} {{ item.model }} from wishlist?">Remove</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state card">
+                <div class="empty-icon"><i class="bi bi-heart"></i></div>
+                <h5>Your Wishlist is Empty</h5>
+                <p>Start adding cars you love to keep track of them here.</p>
+                <a href="{{ url_for('cars.index') }}" class="btn btn-primary">
+                    <i class="bi bi-grid-3x3-gap"></i> Browse Inventory
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- ===== TEST DRIVES ===== -->
+    <div class="tab-pane fade" id="testdrives">
+        {% if test_drives %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Car</th>
+                            <th>Scheduled Date</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for td in test_drives %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        {% if td.image_path %}
+                                            <img src="{{ url_for('static', filename='images/' + td.image_path) }}"
+                                                 style="width:40px;height:30px;object-fit:cover;border-radius:4px"
+                                                 onerror="this.style.display='none'">
+                                        {% endif %}
+                                        <span class="fw-semibold small">{{ td.year }} {{ td.make }} {{ td.model }}</span>
+                                    </div>
+                                </td>
+                                <td class="small">{{ td.scheduled_date.strftime('%Y-%m-%d %H:%M') if td.scheduled_date else 'N/A' }}</td>
+                                <td>
+                                    {% if td.status == 'Pending' %}
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    {% elif td.status == 'Completed' %}
+                                        <span class="badge bg-success">Completed</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ td.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if td.status == 'Pending' %}
+                                        <form action="{{ url_for('customer.cancel_test_drive') }}" method="POST" class="d-inline"
+                                              onsubmit="return confirm('Cancel this test drive?')">
+                                            <input type="hidden" name="drive_id" value="{{ td.drive_id }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
+                                        </form>
+                                    {% else %}
+                                        <span class="text-muted small">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state card">
+                <div class="empty-icon"><i class="bi bi-calendar-x"></i></div>
+                <h5>No Test Drives Booked</h5>
+                <p>Book a test drive for any available car on the inventory page.</p>
+                <a href="{{ url_for('cars.index') }}" class="btn btn-primary">
+                    <i class="bi bi-grid-3x3-gap"></i> Browse Cars
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- ===== ORDERS / TRANSACTIONS ===== -->
+    <div class="tab-pane fade" id="orders">
+        {% if transactions %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Transaction ID</th>
+                            <th>Car</th>
+                            <th>Amount</th>
+                            <th>Payment</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for txn in transactions %}
+                            <tr>
+                                <td><code>{{ txn.transaction_id }}</code></td>
+                                <td class="small">{{ txn.make }} {{ txn.model }}</td>
+                                <td class="fw-bold">${{ "{:,.2f}".format(txn.amount) }}</td>
+                                <td><span class="badge bg-light text-dark">{{ txn.payment_method }}</span></td>
+                                <td>
+                                    {% if txn.transaction_status == 'Success' %}
+                                        <span class="badge bg-success">Success</span>
+                                    {% elif txn.transaction_status == 'Failed' %}
+                                        <span class="badge bg-danger">Failed</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Processing</span>
+                                    {% endif %}
+                                </td>
+                                <td class="small text-muted">{{ txn.transaction_date.strftime('%Y-%m-%d %H:%M') if txn.transaction_date else 'N/A' }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state card">
+                <div class="empty-icon"><i class="bi bi-receipt"></i></div>
+                <h5>No Orders Yet</h5>
+                <p>Your purchase history will appear here.</p>
+                <a href="{{ url_for('cars.index') }}" class="btn btn-primary">
+                    <i class="bi bi-grid-3x3-gap"></i> Browse Cars
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- ===== PREVIOUSLY PURCHASED ===== -->
+    <div class="tab-pane fade" id="purchased">
+        {% if purchased %}
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+                {% for item in purchased %}
+                    <div class="col">
+                        <div class="card car-card">
+                            <div class="row g-0 align-items-center">
+                                <div class="col-4">
+                                    {% if item.image_path %}
+                                        <img src="{{ url_for('static', filename='images/' + item.image_path) }}"
+                                             alt="{{ item.make }}" style="height:100px;width:100%;object-fit:cover;border-radius:0"
+                                             onerror="this.outerHTML=`<div class='car-image-placeholder' style='height:100px;border-radius:0'><i class='bi bi-car-front-fill'></i></div>`">
+                                    {% else %}
+                                        <div class="car-image-placeholder" style="height:100px;border-radius:0">
+                                            <i class="bi bi-car-front-fill"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-8">
+                                    <div class="card-body p-2">
+                                        <h6 class="mb-1">{{ item.year }} {{ item.make }} {{ item.model }}</h6>
+                                        <p class="text-success fw-bold mb-1">${{ "{:,.2f}".format(item.final_sale_price) }}</p>
+                                        <small class="text-muted">Purchased {{ item.sale_date.strftime('%Y-%m-%d') if item.sale_date else 'N/A' }}</small>
+                                        <div class="mt-2">
+                                            <a href="{{ url_for('cars.detail', vin=item.vin) }}" class="btn btn-sm btn-outline-primary">View</a>
+                                            <!-- Write Review button -->
+                                            <button class="btn btn-sm btn-outline-warning"
+                                                    onclick="document.getElementById('reviewLink{{ loop.index }}').click()">
+                                                <i class="bi bi-star"></i> Review
+                                            </button>
+                                            <a id="reviewLink{{ loop.index }}"
+                                               href="{{ url_for('cars.detail', vin=item.vin) }}#reviews"
+                                               style="display:none"></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state card">
+                <div class="empty-icon"><i class="bi bi-bag-check"></i></div>
+                <h5>No Purchases Yet</h5>
+                <p>Your purchased cars will be displayed here.</p>
+                <a href="{{ url_for('cars.index') }}" class="btn btn-primary">
+                    <i class="bi bi-grid-3x3-gap"></i> Browse Cars
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

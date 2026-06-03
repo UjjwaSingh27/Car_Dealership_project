@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Car - Admin - CarDeal{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center mb-4 gap-2">
+            <a href="{{ url_for('admin.panel', tab='inventory') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h4 class="mb-0" style="font-family:var(--font-heading)">
+                <i class="bi bi-pencil-square" style="color:var(--primary-color)"></i>
+                Edit Car
+            </h4>
+        </div>
+
+        <div class="card" style="border-radius:var(--radius)">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">{{ car.year }} {{ car.make }} {{ car.model }}
+                    <code class="ms-2">{{ car.vin }}</code>
+                </h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('admin.edit_car', vin=car.vin) }}" method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Make *</label>
+                            <input type="text" class="form-control" name="make" value="{{ car.make }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Model *</label>
+                            <input type="text" class="form-control" name="model" value="{{ car.model }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Year *</label>
+                            <input type="number" class="form-control" name="year" value="{{ car.year }}" required min="1900" max="2030">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Selling Price ($) *</label>
+                            <input type="number" step="0.01" class="form-control" name="selling_price" value="{{ car.selling_price }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Cost Price ($) *</label>
+                            <input type="number" step="0.01" class="form-control" name="cost_price" value="{{ car.cost_price }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="status">
+                                <option value="Available" {% if car.status == 'Available' %}selected{% endif %}>Available</option>
+                                <option value="Sold" {% if car.status == 'Sold' %}selected{% endif %}>Sold</option>
+                                <option value="Maintenance" {% if car.status == 'Maintenance' %}selected{% endif %}>Maintenance</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Fuel Type</label>
+                            <select class="form-select" name="fuel_type">
+                                <option value="">-- Select --</option>
+                                <option value="Petrol" {% if car.fuel_type == 'Petrol' %}selected{% endif %}>Petrol</option>
+                                <option value="Diesel" {% if car.fuel_type == 'Diesel' %}selected{% endif %}>Diesel</option>
+                                <option value="Electric" {% if car.fuel_type == 'Electric' %}selected{% endif %}>Electric</option>
+                                <option value="Hybrid" {% if car.fuel_type == 'Hybrid' %}selected{% endif %}>Hybrid</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Transmission</label>
+                            <select class="form-select" name="transmission">
+                                <option value="">-- Select --</option>
+                                <option value="Manual" {% if car.transmission == 'Manual' %}selected{% endif %}>Manual</option>
+                                <option value="Automatic" {% if car.transmission == 'Automatic' %}selected{% endif %}>Automatic</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Mileage (km)</label>
+                            <input type="number" class="form-control" name="mileage" value="{{ car.mileage or 0 }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Color</label>
+                            <input type="text" class="form-control" name="color" value="{{ car.color or '' }}">
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Save Changes
+                        </button>
+                        <a href="{{ url_for('admin.panel', tab='inventory') }}" class="btn btn-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
